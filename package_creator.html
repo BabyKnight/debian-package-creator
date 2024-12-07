@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debian Package Creator</title>
+    <style>
+        body {
+            background-color: white;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background: linear-gradient(to bottom right, #d23f8d, #0550c5);
+            height: 100px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        header h1 {
+            margin: 0;
+            padding-top:15px;
+            font-size: 24px;
+            color: white;
+        }
+        .container {
+            padding: 60px 30px;
+            max-width: 800px;
+            margin: 0 auto;
+            color: #868e96;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group select {
+            width: calc(100% - 20px);
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #cbcbcb;
+            border-radius: 4px;
+        }
+        .form-group input::placeholder {
+            color: #868e96;
+        }
+        .form-row {
+            display: flex;
+            justify-content: space-between;
+        }
+        .form-row .form-group {
+            flex: 1;
+            margin-right: 16px;
+        }
+        .form-row .form-group:last-child {
+            margin-right: 0;
+        }
+        .toggle-container {
+            display: flex;
+            align-items: center;
+        }
+        .toggle-btn {
+            position: relative;
+            width: 40px;
+            height: 20px;
+            background-color: #ccc;
+            border-radius: 20px;
+            margin-right: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .toggle-btn::before {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            background-color: white;
+            border-radius: 50%;
+            top: 1px;
+            left: 1px;
+            transition: transform 0.3s;
+        }
+        .toggle-btn.active {
+            background-color: #007bff;
+        }
+        .toggle-btn.active::before {
+            transform: translateX(20px);
+        }
+        .add-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+
+            background-color: #dc3545;
+            color: white;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            margin-right: 15px;
+            font-size: 16px;
+            line-height: 1;
+        }
+        .add-btn.remove {
+            background-color: #dc3545;
+        }
+        .disabled-item {
+             background-color: #007bff
+        }
+        .submit-btn {
+            display: block;
+            width: 260px;
+            padding: 10px;
+            font-size: 16px;
+            color: white;
+            background-color: #007bff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 20px auto 0;
+        }
+        .submit-btn:hover {
+            background-color: #0056b3;
+        }
+        .generated-name {
+            color: rgb(77, 124, 15);
+            padding: 5px 10px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-top: 15px;
+            margin-bottom: 50px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .badge {
+            display: inline-block;
+            padding: 0.25em 0.4em;
+            font-size: 100%;
+            font-weight: 700;
+            line-height: 1;
+            color: #fff;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 0.25rem;
+            background-color: rgba(77, 124, 15);
+        }
+        .item-name label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #868e96;
+        }
+        footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 60px;
+            background-color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+        }
+        footer p {
+            margin: 0;
+            font-size: 14px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Debian Package Creator</h1>
+    </header>
+    <div class="container">
+        <form id="packageForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="platform">Platform</label>
+                    <input type="text" id="platform" name="platform" placeholder="Platform Name" required>
+                </div>
+                <div class="form-group">
+                    <label for="protoPhase">Proto Phase</label>
+                    <select id="protoPhase" name="protoPhase">
+                        <option value=""></option>
+                        <option value="DVT">DVT</option>
+                        <option value="DVT1">DVT1</option>
+                        <option value="DVT2">DVT2</option>
+                        <option value="EVT">EVT</option>
+                        <option value="General">General</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="version">Version</label>
+                    <input type="text" id="version" name="version" placeholder="Enter version. e.g. 1.0.11">
+                </div>
+            </div>
+            <div class="item-name">
+                <label>Preferred Package Name</label>
+            </div>
+            <div class="form-group" for="preferredPackageName">
+                <div class="toggle-container">
+                    <div class="toggle-btn" id="togglePreferredName"></div>
+                    <input type="text" id="preferredPackageName" name="preferredPackageName" placeholder="Enable then Input Preferred Package Name" disabled>
+                </div>
+                <div class="generated-name"><span class="badge" id="generatedName">example_v1.0.deb</span></div>
+            </div>
+            <div class="item-name">
+                <label>Release Note</label>
+            </div>
+            <div class="form-group" for="releaseNote">
+                <input type="text" id="releaseNote" name="releaseNote" placeholder="Enter Description of the Package" required>
+            </div>
+            <div class="item-name">
+                <label>Dependency</label>
+            </div>
+            <div class="form-group" for="dependency">
+                <div class="toggle-container">
+                    <button type="button" class="add-btn disabled-item" onclick="addInput(this, 'package name')">+</button>
+                    <input type="text" id="dependency" name="package name" placeholder="Add Package needs to be installed" disabled>
+                </div>
+            </div>
+            <div class="item-name">
+                <label>File Copy</label>
+            </div>
+            <div class="form-group" for="fileCopy">
+                <div class="toggle-container">
+                    <button type="button" class="add-btn disabled-item" onclick="addInput(this, 'file path')">+</button>
+                    <input type="text" id="fileCopy" name="file path" placeholder="Add File needs to be Copied" disabled>
+                </div>
+            </div>
+            <div class="item-name">
+                <label>Script</label>
+            </div>
+            <div class="form-group" for="script">
+                <div class="toggle-container">
+                    <button type="button" class="add-btn disabled-item" onclick="addInput(this, 'script/command')">+</button>
+                    <input type="text" id="script" name="script/command" placeholder="Add Script/Command" disabled>
+                </div>
+            </div>
+            <button type="button" class="submit-btn" onclick="buildPackage()">Build</button>
+        </form>
+    </div>
+    <footer>
+        <p>Copyright © 2024 - 2025 Vincent Hu. All Rights Reserved.</p>
+    </footer>
+    <script>
+    function addInput(button, name) {
+        const container = button.parentElement.parentElement;
+        const newInputGroup = document.createElement('div');
+        newInputGroup.classList.add('form-group');
+        newInputGroup.innerHTML = `
+            <div class="toggle-container">
+                <button type="button" class="add-btn" onclick="removeInput(this)">-</button>
+                <input type="text" name="${name}" placeholder="Enter ${name}">
+            </div>
+        `;
+        container.insertAdjacentElement('beforebegin', newInputGroup);
+    }
+
+    function removeInput(button) {
+        button.parentElement.parentElement.remove();
+    }
+
+    document.getElementById('togglePreferredName').addEventListener('click', function() {
+        const input = document.getElementById('preferredPackageName');
+        const toggleBtn = document.getElementById('togglePreferredName');
+        const platformInput = document.getElementById('platform');
+        if (input.disabled) {
+            input.disabled = false;
+            toggleBtn.classList.add('active');
+            input.required = true;
+            platformInput.required = false;
+            platformInput.style.borderColor = '#cbcbcb';
+        } else {
+            input.disabled = true;
+            toggleBtn.classList.remove('active');
+            input.required = false;
+            platformInput.required = true;
+            input.style.borderColor = '#cbcbcb';
+        }
+        updateGeneratedName();
+    });
+
+    document.getElementById('packageForm').addEventListener('input', updateGeneratedName);
+
+    function updateGeneratedName() {
+        const platform = document.getElementById('platform').value;
+        const protoPhase = document.getElementById('protoPhase').value;
+        const version = document.getElementById('version').value;
+        const preferredName = document.getElementById('preferredPackageName').value;
+        const generatedName = document.getElementById('generatedName');
+        if (document.getElementById('preferredPackageName').disabled || !preferredName) {
+            const ver= (version) ? `_${version.replace(/^\s+/, '').replace(/\s/g, "_")}` : ''
+            const phase= (protoPhase) ? `_${protoPhase}` : ''
+
+            generatedName.textContent = `${platform.replace(/^\s+/, '').replace(/\s/g, "_")}${phase}${ver}.deb`;
+        } else {
+            generatedName.textContent = `${preferredName.replace(/^\s+/, '').replace(/\s/g, "_")}.deb`;
+        }
+    }
+
+    function buildPackage() {
+        const form = document.getElementById('packageForm');
+        const formData = new FormData(form);
+        const data = {};
+        formData.forEach((value, key) => {
+            if (!data[key]) {
+                data[key] = [];
+            }
+            data[key].push(value);
+        });
+
+        // Highlight required fields if they are empty
+        form.querySelectorAll('input[required]').forEach(input => {
+            if (!input.value) {
+                input.style.borderColor = '#dc3545';
+            } else {
+                input.style.borderColor = '#cbcbcb';
+            }
+        });
+
+        // Combine Dependency, File Copy, and Script fields
+        ['dependency', 'fileCopy', 'script'].forEach(field => {
+            if (data[field]) {
+                data[field] = data[field].map(item => `[${item}]`).join(' ');
+            }
+        });
+
+        console.log(JSON.stringify(data));
+    }
+</script>
+
+</body>
+</html>
